@@ -1,0 +1,78 @@
+version: "3.5"
+
+services:
+  icblog-prometheus:
+    image: prom/prometheus:latest
+    container_name: icblog-prometheus
+    volumes:
+      - ./internal/prometheus:/etc/prometheus/
+      - ./internal/prometheus_data:/prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    networks:
+      - internal_network
+
+  icblog-grafana:
+    image: grafana/grafana
+    container_name: icblog-grafana
+    volumes:
+      - ./internal/grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    user: "472"
+    ports:
+      - "3000:3000"
+    networks:
+      - internal_network
+    depends_on:
+      - icblog-prometheus
+
+  icblog-mysql:
+    image: mysql:latest
+    container_name: icblog-mysql
+    volumes:
+      - ./internal/mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    env_file:
+      - internal/mysql.env
+    ports:
+      - "33068:3306"
+    networks:
+      - internal_network
+    cap_add:
+      - SYS_NICE
+
+  icblog-backend:
+    image: ic1101/icblog-backend:latest
+    container_name: icblog-backend
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    networks:
+      - internal_network
+    depends_on:
+      - icblog-mysql
+      - icblog-prometheus
+
+volumes:
+  mysql_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  prometheus:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  internal_network:
+    name: internal_network
