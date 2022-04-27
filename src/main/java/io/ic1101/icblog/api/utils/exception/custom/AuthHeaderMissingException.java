@@ -1,4 +1,4 @@
-package io.ic1101.icblog.api.exception.custom;
+package io.ic1101.icblog.api.utils.exception.custom;
 
 public class AuthHeaderMissingException extends RuntimeException {
 

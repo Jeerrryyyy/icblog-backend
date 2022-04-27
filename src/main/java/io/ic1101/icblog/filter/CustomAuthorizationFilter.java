@@ -1,7 +1,8 @@
 package io.ic1101.icblog.filter;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.ic1101.icblog.api.exception.custom.AuthHeaderMissingException;
+import io.ic1101.icblog.api.utils.exception.custom.AuthHeaderMissingException;
+import io.ic1101.icblog.api.utils.exception.custom.JwtParsingException;
 import io.ic1101.icblog.config.SecurityConfig;
 import io.ic1101.icblog.utils.TokenUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,12 +21,15 @@ import java.util.List;
 
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
+    // TODO: Config?
+    private final String apiKey = "abc";
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse,
             FilterChain filterChain
-    ) throws ServletException, IOException {
+    ) throws ServletException, IOException, AuthHeaderMissingException, JwtParsingException {
         if (Arrays.asList(SecurityConfig.SKIP_URLS).contains(httpServletRequest.getServletPath())) {
             filterChain.doFilter(httpServletRequest, httpServletResponse);
             return;
@@ -39,6 +43,15 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
         String accessToken = authorizationHeader.substring("Bearer ".length());
 
+        if (Arrays.asList(SecurityConfig.INTERNAL_API_URLS).contains(httpServletRequest.getServletPath())) {
+            if (!accessToken.equals(apiKey)) {
+                throw new AuthHeaderMissingException("Please provide a valid auth header");
+            }
+
+            filterChain.doFilter(httpServletRequest, httpServletResponse);
+            return;
+        }
+
         try {
             DecodedJWT decodedJWT = TokenUtils.decodeToken(accessToken);
             String email = decodedJWT.getSubject();
@@ -50,7 +63,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
-            TokenUtils.handleError(ex, httpServletResponse);
+            throw new JwtParsingException("Please provide a valid jwt!");
         }
     }
 }

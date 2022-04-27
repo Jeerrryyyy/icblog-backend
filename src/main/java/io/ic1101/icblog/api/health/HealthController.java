@@ -1,4 +1,4 @@
-package io.ic1101.icblog.api.controller;
+package io.ic1101.icblog.api.health;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

@@ -5,8 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.ic1101.icblog.api.dto.response.ErrorDto;
-import io.ic1101.icblog.api.dto.response.TokenDto;
+import io.ic1101.icblog.api.utils.dto.TokenDto;
 import io.ic1101.icblog.database.entity.RoleEntity;
 import io.ic1101.icblog.database.entity.UserEntity;
 import org.springframework.http.HttpStatus;
@@ -76,14 +75,6 @@ public class TokenUtils {
                 .withExpiresAt(new Date(System.currentTimeMillis() + 30 * 60 * 1000))
                 .withIssuer(httpServletRequest.getRequestURL().toString())
                 .sign(ALGORITHM);
-    }
-
-    public static void handleError(Exception ex, HttpServletResponse httpServletResponse) throws IOException {
-        httpServletResponse.setHeader("error", ex.getMessage());
-        httpServletResponse.setStatus(HttpStatus.FORBIDDEN.value());
-        httpServletResponse.setContentType(MediaType.APPLICATION_JSON);
-
-        new ObjectMapper().writeValue(httpServletResponse.getOutputStream(), new ErrorDto(ex.getMessage()));
     }
 
     public static void createTokenResponse(String accessToken, String refreshToken, HttpServletResponse httpServletResponse) throws IOException {

@@ -36,7 +36,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/auth/refresh",
             "/login",
             "/user/create",
-            "/health",
+            "/health"
+    };
+
+    public static final String[] INTERNAL_API_URLS = new String[]{
             "/actuator",
             "/actuator/health",
             "/actuator/prometheus"
@@ -53,6 +56,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         httpSecurity.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         httpSecurity.authorizeRequests().antMatchers(SKIP_URLS).permitAll();
+        httpSecurity.authorizeRequests().antMatchers(INTERNAL_API_URLS).permitAll();
+
         httpSecurity.authorizeRequests().anyRequest().authenticated();
 
         httpSecurity.addFilter(new CustomAuthenticationFilter(this.authenticationManagerBean()));
